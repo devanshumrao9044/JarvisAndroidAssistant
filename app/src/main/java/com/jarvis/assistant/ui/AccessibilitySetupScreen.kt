@@ -52,14 +52,6 @@ import com.jarvis.assistant.ui.theme.JarvisEmerald
 import com.jarvis.assistant.ui.theme.JarvisTextPrimary
 import com.jarvis.assistant.ui.theme.JarvisTextSecondary
 
-/**
- * Implements Section 4 ("Accessibility setup"):
- * - Explanation of what the service does
- * - Button that opens Android Accessibility Settings
- * - Enabled/disabled status indicator
- * - Test action controls
- * - Disable or stop-control option
- */
 @Composable
 fun AccessibilitySetupScreen(
     assistantName: String,
@@ -100,7 +92,6 @@ fun AccessibilitySetupScreen(
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        // Live Service Status Card
         Card(
             modifier = Modifier.fillMaxWidth(),
             colors = CardDefaults.cardColors(containerColor = JarvisCardSurface),
@@ -129,12 +120,12 @@ fun AccessibilitySetupScreen(
 
                 Spacer(modifier = Modifier.height(8.dp))
 
+                val settingStateText = if (permissionSnapshot.isAccessibilitySettingEnabled) "Enabled" else "Disabled"
+                val boundStateText = if (permissionSnapshot.isAccessibilityServiceBound) "Bound & Ready" else "Not Bound"
+                val masterStateText = if (automationEnabledByUser) "Allowed" else "Paused by User"
+
                 Text(
-                    text = "• Android Accessibility Setting: ${if (permissionSnapshot.isAccessibilitySettingEnabled) "Enabled" else "Disabled"}
-" +
-                        "• Service Connection: ${if (permissionSnapshot.isAccessibilityServiceBound) "Bound & Ready" else "Not Bound"}
-" +
-                        "• In-App Master Switch: ${if (automationEnabledByUser) "Allowed" else "Paused by User"}",
+                    text = "• Android Accessibility Setting: $settingStateText\n• Service Connection: $boundStateText\n• In-App Master Switch: $masterStateText",
                     color = JarvisTextSecondary,
                     fontSize = 13.sp
                 )
@@ -178,7 +169,6 @@ fun AccessibilitySetupScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Explanation of What the Service Does & Safety Guarantees
         Card(
             modifier = Modifier.fillMaxWidth(),
             colors = CardDefaults.cardColors(containerColor = JarvisCardSurface),
@@ -193,25 +183,15 @@ fun AccessibilitySetupScreen(
                 )
                 Spacer(modifier = Modifier.height(6.dp))
                 Text(
-                    text = "When enabled by you in Android Settings, AccessibilityAutomationService allows $assistantName to perform explicit voice-authorized actions:
-" +
-                        "1. Click visible buttons and UI elements matching spoken labels (e.g., "Tap the Search button").
-" +
-                        "2. Focus and type text into selected input fields.
-" +
-                        "3. Dispatch smooth directional scroll gestures (Up, Down, Left, Right).
-" +
-                        "4. Navigate Back, Home, or open Recent Apps.
-
-" +
-                        "Safety & Privacy Policy:
-" +
-                        "• The service never runs shell commands or arbitrary code.
-" +
-                        "• It blocks interaction with passwords, PINs, banking screens, and CAPTCHAs.
-" +
-                        "• Sensitive actions (sending messages, calls, purchases, deletions) always ask for your confirmation.
-" +
+                    text = "When enabled by you in Android Settings, AccessibilityAutomationService allows $assistantName to perform explicit voice-authorized actions:\n" +
+                        "1. Click visible buttons and UI elements matching spoken labels (e.g., 'Tap the Search button').\n" +
+                        "2. Focus and type text into selected input fields.\n" +
+                        "3. Dispatch smooth directional scroll gestures (Up, Down, Left, Right).\n" +
+                        "4. Navigate Back, Home, or open Recent Apps.\n\n" +
+                        "Safety & Privacy Policy:\n" +
+                        "• The service never runs shell commands or arbitrary code.\n" +
+                        "• It blocks interaction with passwords, PINs, banking screens, and CAPTCHAs.\n" +
+                        "• Sensitive actions (sending messages, calls, purchases, deletions) always ask for your confirmation.\n" +
                         "• If Accessibility is disabled, normal voice chat and app launching ('Open YouTube') continue to work.",
                     color = JarvisTextSecondary,
                     fontSize = 13.sp
@@ -221,7 +201,6 @@ fun AccessibilitySetupScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Interactive Test Actions Card
         Card(
             modifier = Modifier.fillMaxWidth(),
             colors = CardDefaults.cardColors(containerColor = JarvisCardSurface),

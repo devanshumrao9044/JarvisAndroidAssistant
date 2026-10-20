@@ -141,7 +141,6 @@ fun HomeScreen(
             .padding(horizontal = 18.dp, vertical = 14.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // Top Header: Assistant Identity & Quick Navigation
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -213,7 +212,6 @@ fun HomeScreen(
 
         Spacer(modifier = Modifier.height(10.dp))
 
-        // Real-Time Status Pills (Gemini Live & Phone Control)
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(10.dp)
@@ -274,7 +272,6 @@ fun HomeScreen(
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        // PART 2: Prominent 3D AI Companion Avatar in the Center of the Home Screen
         AvatarView(
             avatarRenderer = avatarRenderer,
             assistantName = identityState.assistantName,
@@ -283,7 +280,6 @@ fun HomeScreen(
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        // Interactive 13-Expression & Gesture Selector Bar
         Column(modifier = Modifier.fillMaxWidth()) {
             Text(
                 text = "3D Avatar Expressions (Auto AI-Driven or Tap to Preview):",
@@ -320,7 +316,6 @@ fun HomeScreen(
 
         Spacer(modifier = Modifier.height(10.dp))
 
-        // Voice Session State + Live Sound-Wave Indicator
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -341,7 +336,6 @@ fun HomeScreen(
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        // Primary Voice Controls
         if (!sessionState.isActiveSession) {
             Button(
                 onClick = onStartConversationClick,
@@ -402,7 +396,6 @@ fun HomeScreen(
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        // Live Phone-Control Status Banner
         Card(
             modifier = Modifier.fillMaxWidth(),
             colors = CardDefaults.cardColors(containerColor = JarvisCardSurface),
@@ -427,7 +420,6 @@ fun HomeScreen(
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        // Recent Conversation Preview Card
         Card(
             modifier = Modifier
                 .fillMaxWidth()
@@ -468,7 +460,7 @@ fun HomeScreen(
 
                 if (recentMessages.isEmpty()) {
                     Text(
-                        text = "No messages yet. Tap 'Start Conversation' and try saying: "Hello!", "Tell me something funny", or "Open YouTube."",
+                        text = "No messages yet. Tap 'Start Conversation' and try saying: 'Hello!', 'Tell me something funny', or 'Open YouTube.'",
                         style = MaterialTheme.typography.bodySmall,
                         color = JarvisTextSecondary
                     )

@@ -133,7 +133,6 @@ fun ConversationScreen(
 
         Spacer(modifier = Modifier.height(6.dp))
 
-        // Compact 3D Avatar Viewport Synchronized with Voice & Emotions
         AvatarView(
             avatarRenderer = avatarRenderer,
             assistantName = assistantName,
@@ -142,7 +141,6 @@ fun ConversationScreen(
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        // Live Conversation Transcript List
         LazyColumn(
             state = listState,
             modifier = Modifier
@@ -164,15 +162,11 @@ fun ConversationScreen(
                             )
                             Spacer(modifier = Modifier.height(4.dp))
                             Text(
-                                text = "Speak naturally or type below. Try:
-" +
-                                    "• "Hello!" (Friendly + Greeting Wave)
-" +
-                                    "• "Tell me something funny" (Laughing)
-" +
-                                    "• "Think carefully about this question" (Thinking)
-" +
-                                    "• "Open YouTube" / "Scroll down"",
+                                text = "Speak naturally or type below. Try:\n" +
+                                    "• 'Hello!' (Friendly + Greeting Wave)\n" +
+                                    "• 'Tell me something funny' (Laughing)\n" +
+                                    "• 'Think carefully about this question' (Thinking)\n" +
+                                    "• 'Open YouTube' / 'Scroll down'",
                                 color = JarvisTextSecondary,
                                 fontSize = 12.sp
                             )

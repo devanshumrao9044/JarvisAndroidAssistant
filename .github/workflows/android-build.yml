@@ -20,16 +20,28 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Setup Gradle
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Setup Gradle 8.7
         uses: gradle/actions/setup-gradle@v3
         with:
           gradle-version: '8.7'
 
       - name: Build Debug APK
-        run: gradle assembleDebug --stacktrace
+        run: |
+          if [ -f "settings.gradle.kts" ]; then
+            gradle assembleDebug --stacktrace
+          elif [ -f "JarvisAndroidAssistant/settings.gradle.kts" ]; then
+            cd JarvisAndroidAssistant && gradle assembleDebug --stacktrace
+          else
+            echo "Error: Could not find settings.gradle.kts in root or JarvisAndroidAssistant/"
+            ls -la
+            exit 1
+          fi
 
       - name: Upload Installable Debug APK
         uses: actions/upload-artifact@v4
         with:
           name: JarvisAndroidAssistant-debug-apk
-          path: app/build/outputs/apk/debug/app-debug.apk
+          path: "**/app/build/outputs/apk/debug/app-debug.apk"

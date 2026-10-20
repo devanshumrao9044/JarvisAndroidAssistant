@@ -123,7 +123,6 @@ fun SettingsScreen(
             )
         }
 
-        // 1. Assistant Identity Card
         SettingsSectionCard(title = "1. Assistant Identity & Wake-Word Info") {
             Text(
                 text = "Current Active Identity: ${identityState.assistantName} (AI Provider: Google Gemini Live)",
@@ -166,22 +165,19 @@ fun SettingsScreen(
             }
         }
 
-        // 2. 3D Avatar Engine, Performance & GLB Asset Inspector (Part 2)
         SettingsSectionCard(title = "2. 3D Avatar Engine & GLB Asset Status (Part 2)") {
             val statusDescription = when (avatarModelLoadState) {
-                is AvatarModelLoadState.LoadedGlbModel ->
-                    "GLB Model Loaded: ${avatarModelLoadState.assetPath}
-" +
-                        "• Entities: ${avatarModelLoadState.entityCount}
-" +
-                        "• Skeletal Clips: ${avatarModelLoadState.animationClips.joinToString().ifEmpty { "None" }}
-" +
-                        "• Facial Morph Targets: ${avatarModelLoadState.detectedMorphTargetCount} (${if (avatarModelLoadState.hasFacialMorphTargets) "Supported" else "None in mesh"})"
+                is AvatarModelLoadState.LoadedGlbModel -> {
+                    val clipsStr = avatarModelLoadState.animationClips.joinToString().ifEmpty { "None" }
+                    val morphSupported = if (avatarModelLoadState.hasFacialMorphTargets) "Supported" else "None in mesh"
+                    "GLB Model Loaded: ${avatarModelLoadState.assetPath}\n" +
+                        "• Entities: ${avatarModelLoadState.entityCount}\n" +
+                        "• Skeletal Clips: $clipsStr\n" +
+                        "• Facial Morph Targets: ${avatarModelLoadState.detectedMorphTargetCount} ($morphSupported)"
+                }
                 is AvatarModelLoadState.AwaitingModelAsset ->
-                    "Status: AWAITING_MODEL_ASSET (Interactive 3D Holo-Rig Active)
-" +
-                        "• Expected GLB File Path: app/src/main/assets/${avatarModelLoadState.expectedAssetPath}
-" +
+                    "Status: AWAITING_MODEL_ASSET (Interactive 3D Holo-Rig Active)\n" +
+                        "• Expected GLB File Path: app/src/main/assets/${avatarModelLoadState.expectedAssetPath}\n" +
                         "• Drop any glTF 2.0 binary (.glb) character into that path to replace the 3D Holo-Rig without changing code."
                 is AvatarModelLoadState.Error ->
                     "Status: Fallback Active (${avatarModelLoadState.reason})"
@@ -244,7 +240,6 @@ fun SettingsScreen(
             }
         }
 
-        // 3. Gemini Live API & Model Configuration
         SettingsSectionCard(title = "3. Gemini Live API & Active Model") {
             Text(
                 text = "Active Model ID: ${identityState.activeModelId}",
@@ -311,7 +306,6 @@ fun SettingsScreen(
             }
         }
 
-        // 4. API Key / Ephemeral Credential Security & Connection Test
         SettingsSectionCard(title = "4. Gemini API Credentials & Connection Test") {
             Text(
                 text = "Stored Credential: $maskedCredentialPreview",
@@ -414,7 +408,6 @@ fun SettingsScreen(
             }
         }
 
-        // 5. Voice Language, Persona & Continuous Conversation
         SettingsSectionCard(title = "5. Voice Language & Conversation Flow") {
             Text("Selected Language: ${identityState.language.displayName}", color = JarvisTextPrimary, fontSize = 13.sp)
             Spacer(modifier = Modifier.height(6.dp))
@@ -476,12 +469,11 @@ fun SettingsScreen(
             }
         }
 
-        // 6. Permissions & Phone Control Access
         SettingsSectionCard(title = "6. Permissions & Phone Control") {
+            val micState = if (permissionSnapshot.hasRecordAudioPermission) "Granted" else "Not Granted"
+            val accState = if (permissionSnapshot.isPhoneControlReady) "Enabled & Bound" else "Disabled"
             Text(
-                text = "• Microphone Permission: ${if (permissionSnapshot.hasRecordAudioPermission) "Granted" else "Not Granted"}
-" +
-                    "• Accessibility Service: ${if (permissionSnapshot.isPhoneControlReady) "Enabled & Bound" else "Disabled"}",
+                text = "• Microphone Permission: $micState\n• Accessibility Service: $accState",
                 color = JarvisTextPrimary,
                 fontSize = 13.sp
             )
@@ -504,7 +496,6 @@ fun SettingsScreen(
             }
         }
 
-        // 7. Local Memory, Privacy & Emergency Stop
         SettingsSectionCard(title = "7. Local Memory, Privacy & Emergency Stop") {
             Row(
                 modifier = Modifier.fillMaxWidth(),
