@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">AI Assistant</string>
+    <string name="accessibility_service_label">AI Assistant Phone Control</string>
+    <string name="accessibility_service_description">Allows your personal AI assistant to perform user-authorized screen actions such as clicking visible buttons, typing into selected fields, scrolling, and navigating back or home when commanded by voice.</string>
+</resources>

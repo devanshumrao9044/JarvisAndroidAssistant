@@ -1,0 +1,7 @@
+-keepattributes *Annotation*,InnerClasses,Signature
+-keep class com.jarvis.assistant.ai.** { *; }
+-keep class com.jarvis.assistant.automation.** { *; }
+-keep class com.jarvis.assistant.avatar.** { *; }
+-keep class com.google.android.filament.** { *; }
+-dontwarn okhttp3.**
+-dontwarn okio.**
