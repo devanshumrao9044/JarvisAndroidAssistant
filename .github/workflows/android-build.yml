@@ -7,6 +7,9 @@ on:
     branches: [ "main", "master" ]
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build-apk:
     runs-on: ubuntu-latest
@@ -30,37 +33,282 @@ jobs:
         with:
           gradle-version: '8.7'
 
-      - name: Auto-Fix Kotlin Imports & Build Debug APK
+      - name: Permanently Fix Avatar Files & Build Debug APK
         run: |
           if [ -d "JarvisAndroidAssistant" ] && [ -f "JarvisAndroidAssistant/settings.gradle.kts" ]; then
             cd JarvisAndroidAssistant
           fi
 
-          # 1. Fix invalid top-level weight import and LocalLifecycleOwner import in AvatarView.kt
-          if [ -f "app/src/main/java/com/jarvis/assistant/avatar/AvatarView.kt" ]; then
-            sed -i '/import androidx\.compose\.foundation\.layout\.weight/d' app/src/main/java/com/jarvis/assistant/avatar/AvatarView.kt
-            sed -i 's/import androidx\.lifecycle\.compose\.LocalLifecycleOwner/import androidx.compose.ui.platform.LocalLifecycleOwner/g' app/src/main/java/com/jarvis/assistant/avatar/AvatarView.kt
-          fi
+          # 1. Permanently write clean AvatarView.kt (fixes missing package header & Compose imports)
+          cat << 'EOF' > app/src/main/java/com/jarvis/assistant/avatar/AvatarView.kt
+          package com.jarvis.assistant.avatar
 
-          # 2. Fix missing holdDurationMs parameter in AvatarVoiceSynchronizer.kt
-          if [ -f "app/src/main/java/com/jarvis/assistant/avatar/AvatarVoiceSynchronizer.kt" ]; then
-            sed -i 's/fun triggerContextualExpression(expression: AvatarExpression, gesture: AvatarGesture? = null)/fun triggerContextualExpression(expression: AvatarExpression, gesture: AvatarGesture? = null, holdDurationMs: Long = 4500L)/g' app/src/main/java/com/jarvis/assistant/avatar/AvatarVoiceSynchronizer.kt
-          fi
+          import android.view.SurfaceView
+          import androidx.compose.foundation.BorderStroke
+          import androidx.compose.foundation.Canvas
+          import androidx.compose.foundation.background
+          import androidx.compose.foundation.layout.Arrangement
+          import androidx.compose.foundation.layout.Box
+          import androidx.compose.foundation.layout.Column
+          import androidx.compose.foundation.layout.Row
+          import androidx.compose.foundation.layout.fillMaxSize
+          import androidx.compose.foundation.layout.fillMaxWidth
+          import androidx.compose.foundation.layout.height
+          import androidx.compose.foundation.layout.padding
+          import androidx.compose.foundation.shape.RoundedCornerShape
+          import androidx.compose.material3.Card
+          import androidx.compose.material3.CardDefaults
+          import androidx.compose.material3.MaterialTheme
+          import androidx.compose.material3.Text
+          import androidx.compose.runtime.Composable
+          import androidx.compose.runtime.DisposableEffect
+          import androidx.compose.runtime.collectAsState
+          import androidx.compose.runtime.getValue
+          import androidx.compose.ui.Alignment
+          import androidx.compose.ui.Modifier
+          import androidx.compose.ui.geometry.Offset
+          import androidx.compose.ui.graphics.Brush
+          import androidx.compose.ui.graphics.Color
+          import androidx.compose.ui.graphics.StrokeCap
+          import androidx.compose.ui.graphics.drawscope.Stroke
+          import androidx.compose.ui.platform.LocalLifecycleOwner
+          import androidx.compose.ui.text.font.FontWeight
+          import androidx.compose.ui.text.style.TextOverflow
+          import androidx.compose.ui.unit.Dp
+          import androidx.compose.ui.unit.dp
+          import androidx.compose.ui.unit.sp
+          import androidx.compose.ui.viewinterop.AndroidView
+          import com.jarvis.assistant.ui.theme.JarvisAmber
+          import com.jarvis.assistant.ui.theme.JarvisCardSurface
+          import com.jarvis.assistant.ui.theme.JarvisCyan
+          import com.jarvis.assistant.ui.theme.JarvisDeepNavy
+          import com.jarvis.assistant.ui.theme.JarvisElectricBlue
+          import com.jarvis.assistant.ui.theme.JarvisEmerald
+          import com.jarvis.assistant.ui.theme.JarvisTextPrimary
+          import com.jarvis.assistant.ui.theme.JarvisTextSecondary
 
-          # 3. Ensure integer math in AvatarRenderer.kt
-          if [ -f "app/src/main/java/com/jarvis/assistant/avatar/AvatarRenderer.kt" ]; then
-            sed -i 's/minFrameIntervalNanos \* 0\.88L/minFrameIntervalNanos * 88L \/ 100L/g' app/src/main/java/com/jarvis/assistant/avatar/AvatarRenderer.kt
-          fi
+          @Composable
+          fun AvatarView(
+              avatarRenderer: AvatarRenderer,
+              assistantName: String,
+              modifier: Modifier = Modifier,
+              viewportHeight: Dp = 320.dp
+          ) {
+              val lifecycleOwner = LocalLifecycleOwner.current
+              val modelState by avatarRenderer.modelLoadState.collectAsState()
+              val pose by avatarRenderer.evaluatedPose.collectAsState()
 
-          # 4. Run Gradle build without --stacktrace so any compiler message is printed cleanly at the bottom
-          set -o pipefail
-          gradle assembleDebug --console=plain 2>&1 | tee build_output.log || {
-            echo "===================================================="
-            echo "EXACT COMPILER / GRADLE ERRORS (BOTTOM SUMMARY):"
-            echo "===================================================="
-            grep -E "(^e: |FAILURE:|What went wrong:|Execution failed for task|> |Unresolved reference|Type mismatch|Cannot find)" build_output.log | tail -n 50
-            exit 1
+              DisposableEffect(lifecycleOwner) {
+                  avatarRenderer.startRenderLoop()
+                  onDispose { avatarRenderer.stopRenderLoop() }
+              }
+
+              Card(
+                  modifier = modifier
+                      .fillMaxWidth()
+                      .height(viewportHeight),
+                  colors = CardDefaults.cardColors(containerColor = JarvisDeepNavy),
+                  border = BorderStroke(1.5.dp, JarvisCyan.copy(alpha = 0.45f)),
+                  shape = RoundedCornerShape(20.dp)
+              ) {
+                  Column(
+                      modifier = Modifier
+                          .fillMaxSize()
+                          .background(Color(0xFF07111F)),
+                      verticalArrangement = Arrangement.Bottom
+                  ) {
+                      Box(
+                          modifier = Modifier
+                              .fillMaxWidth()
+                              .weight(1.0f)
+                      ) {
+                          if (modelState is AvatarModelLoadState.LoadedGlbModel) {
+                              AndroidView(
+                                  factory = { context ->
+                                      SurfaceView(context).also { view ->
+                                          avatarRenderer.attachSurfaceView(view, lifecycleOwner.lifecycle)
+                                      }
+                                  },
+                                  modifier = Modifier.fillMaxSize()
+                              )
+                          } else {
+                              Canvas(modifier = Modifier.fillMaxSize()) {
+                                  val cx = size.width * 0.5f
+                                  val cy = size.height * 0.48f + (pose.torsoBreathingOffset * size.height)
+                                  val r = size.minDimension * 0.28f
+                                  val primaryColor = when (pose.expression) {
+                                      AvatarExpression.HAPPY, AvatarExpression.EXCITED, AvatarExpression.LAUGHING -> JarvisEmerald
+                                      AvatarExpression.THINKING -> JarvisElectricBlue
+                                      AvatarExpression.SURPRISED, AvatarExpression.CONFUSED -> JarvisAmber
+                                      else -> JarvisCyan
+                                  }
+                                  drawCircle(
+                                      brush = Brush.radialGradient(
+                                          colors = listOf(primaryColor.copy(alpha = 0.25f), Color.Transparent),
+                                          center = Offset(cx, cy),
+                                          radius = r * 1.6f
+                                      ),
+                                      radius = r * 1.6f,
+                                      center = Offset(cx, cy)
+                                  )
+                                  drawCircle(
+                                      color = primaryColor,
+                                      radius = r,
+                                      center = Offset(cx, cy),
+                                      style = Stroke(width = 2.5.dp.toPx())
+                                  )
+                                  val eyeOffsetX = r * 0.36f
+                                  val eyeY = cy - r * 0.15f
+                                  val eyeOpen = (1.0f - pose.eyeBlinkLeft).coerceIn(0.1f, 1.0f)
+                                  drawCircle(
+                                      color = primaryColor,
+                                      radius = (5.0f * eyeOpen).dp.toPx(),
+                                      center = Offset(cx - eyeOffsetX, eyeY)
+                                  )
+                                  drawCircle(
+                                      color = primaryColor,
+                                      radius = (5.0f * eyeOpen).dp.toPx(),
+                                      center = Offset(cx + eyeOffsetX, eyeY)
+                                  )
+                                  val mouthY = cy + r * 0.34f
+                                  val mouthHalfW = r * (0.32f + pose.smileWeight * 0.12f)
+                                  val mouthOpenH = r * (0.04f + pose.mouthOpenWeight * 0.28f)
+                                  drawLine(
+                                      color = primaryColor,
+                                      start = Offset(cx - mouthHalfW, mouthY),
+                                      end = Offset(cx + mouthHalfW, mouthY),
+                                      strokeWidth = (3.0f + mouthOpenH * 0.15f).dp.toPx(),
+                                      cap = StrokeCap.Round
+                                  )
+                              }
+                          }
+                      }
+                      Row(
+                          modifier = Modifier
+                              .fillMaxWidth()
+                              .background(JarvisCardSurface.copy(alpha = 0.9f))
+                              .padding(horizontal = 14.dp, vertical = 8.dp),
+                          horizontalArrangement = Arrangement.SpaceBetween,
+                          verticalAlignment = Alignment.CenterVertically
+                      ) {
+                          Column(modifier = Modifier.weight(1.0f)) {
+                              Text(
+                                  text = assistantName.ifBlank { "JARVIS" },
+                                  color = JarvisTextPrimary,
+                                  fontWeight = FontWeight.SemiBold,
+                                  fontSize = 14.sp,
+                                  maxLines = 1,
+                                  overflow = TextOverflow.Ellipsis
+                              )
+                              Text(
+                                  text = pose.expression.displayTitle + " · " + pose.activeGesture.displayLabel,
+                                  color = JarvisTextSecondary,
+                                  fontSize = 11.sp,
+                                  maxLines = 1,
+                                  overflow = TextOverflow.Ellipsis
+                              )
+                          }
+                          Text(
+                              text = when (modelState) {
+                                  is AvatarModelLoadState.Initializing -> "Preparing"
+                                  is AvatarModelLoadState.LoadingFromAssets -> "Loading model"
+                                  is AvatarModelLoadState.LoadedGlbModel -> "3D GLB Ready"
+                                  is AvatarModelLoadState.AwaitingModelAsset -> "3D Holo-Rig Active"
+                                  is AvatarModelLoadState.Error -> "3D Holo-Rig Fallback"
+                              },
+                              color = MaterialTheme.colorScheme.primary,
+                              fontSize = 11.sp,
+                              modifier = Modifier.padding(start = 8.dp)
+                          )
+                      }
+                  }
+              }
           }
+          EOF
+          # Strip leading indentation from heredoc
+          sed -i 's/^          //' app/src/main/java/com/jarvis/assistant/avatar/AvatarView.kt
+
+          # 2. Permanently write clean AvatarVoiceSynchronizer.kt
+          cat << 'EOF' > app/src/main/java/com/jarvis/assistant/avatar/AvatarVoiceSynchronizer.kt
+          package com.jarvis.assistant.avatar
+
+          import com.jarvis.assistant.voice.VoiceSessionState
+
+          class AvatarVoiceSynchronizer(
+              private val expressionController: AvatarExpressionController,
+              private val animationController: AvatarAnimationController
+          ) {
+              fun triggerContextualExpression(
+                  expression: AvatarExpression,
+                  gesture: AvatarGesture? = null,
+                  holdDurationMs: Long = 4500L
+              ) {
+                  expressionController.setExpression(expression)
+                  val durationSeconds = (holdDurationMs / 1000.0f).coerceIn(1.0f, 10.0f)
+                  animationController.triggerGesture(gesture ?: expression.defaultGesture, durationSeconds)
+              }
+
+              fun onVoiceFrameUpdate(
+                  sessionState: VoiceSessionState,
+                  inputAmplitude: Float,
+                  outputAmplitude: Float,
+                  isAssistantSpeaking: Boolean
+              ) {
+                  animationController.liveVoiceMouthOpenTarget =
+                      if (isAssistantSpeaking) outputAmplitude.coerceIn(0.0f, 1.0f) else 0.0f
+
+                  when {
+                      isAssistantSpeaking -> {
+                          expressionController.setExpression(AvatarExpression.SPEAKING)
+                          if (animationController.activeGesture.value != AvatarGesture.SPEAKING_GESTURE) {
+                              animationController.triggerGesture(AvatarGesture.SPEAKING_GESTURE)
+                          }
+                      }
+                      sessionState == VoiceSessionState.LISTENING && inputAmplitude > 0.025f -> {
+                          expressionController.setExpression(AvatarExpression.LISTENING)
+                          if (animationController.activeGesture.value != AvatarGesture.LISTENING_POSE) {
+                              animationController.triggerGesture(AvatarGesture.LISTENING_POSE)
+                          }
+                      }
+                      sessionState == VoiceSessionState.PROCESSING || sessionState == VoiceSessionState.EXECUTING_ACTION -> {
+                          expressionController.setExpression(AvatarExpression.THINKING)
+                          if (animationController.activeGesture.value != AvatarGesture.THINKING_POSE) {
+                              animationController.triggerGesture(AvatarGesture.THINKING_POSE)
+                          }
+                      }
+                      sessionState == VoiceSessionState.LISTENING -> {
+                          expressionController.setExpression(AvatarExpression.LISTENING)
+                      }
+                      !sessionState.isActiveSession -> {
+                          expressionController.setExpression(AvatarExpression.IDLE)
+                          if (animationController.activeGesture.value != AvatarGesture.NATURAL_IDLE) {
+                              animationController.triggerGesture(AvatarGesture.NATURAL_IDLE)
+                          }
+                      }
+                  }
+              }
+
+              fun onStopSpeakingTriggered(sessionStillActive: Boolean) {
+                  animationController.liveVoiceMouthOpenTarget = 0.0f
+                  val expression = if (sessionStillActive) AvatarExpression.LISTENING else AvatarExpression.IDLE
+                  expressionController.setExpression(expression)
+                  animationController.triggerGesture(expression.defaultGesture)
+              }
+          }
+          EOF
+          sed -i 's/^          //' app/src/main/java/com/jarvis/assistant/avatar/AvatarVoiceSynchronizer.kt
+
+          # 3. Build Debug APK
+          gradle assembleDebug --console=plain
+
+          # 4. Save the fixed files permanently back to the GitHub repository branch
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          if [ -n "$(git status --porcelain)" ]; then
+            git add app/src/main/java/com/jarvis/assistant/avatar/AvatarView.kt app/src/main/java/com/jarvis/assistant/avatar/AvatarVoiceSynchronizer.kt
+            git commit -m "Permanent auto-fix for AvatarView and AvatarVoiceSynchronizer [skip ci]" || true
+            git push || true
+          fi
 
       - name: Upload Installable Debug APK
         uses: actions/upload-artifact@v4
