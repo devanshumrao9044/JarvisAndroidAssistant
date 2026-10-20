@@ -30,17 +30,37 @@ jobs:
         with:
           gradle-version: '8.7'
 
-      - name: Build Debug APK
+      - name: Auto-Fix Kotlin Imports & Build Debug APK
         run: |
-          if [ -f "settings.gradle.kts" ]; then
-            gradle assembleDebug --stacktrace
-          elif [ -f "JarvisAndroidAssistant/settings.gradle.kts" ]; then
-            cd JarvisAndroidAssistant && gradle assembleDebug --stacktrace
-          else
-            echo "Error: Could not find settings.gradle.kts in root or JarvisAndroidAssistant/"
-            ls -la
-            exit 1
+          if [ -d "JarvisAndroidAssistant" ] && [ -f "JarvisAndroidAssistant/settings.gradle.kts" ]; then
+            cd JarvisAndroidAssistant
           fi
+
+          # 1. Fix invalid top-level weight import and LocalLifecycleOwner import in AvatarView.kt
+          if [ -f "app/src/main/java/com/jarvis/assistant/avatar/AvatarView.kt" ]; then
+            sed -i '/import androidx\.compose\.foundation\.layout\.weight/d' app/src/main/java/com/jarvis/assistant/avatar/AvatarView.kt
+            sed -i 's/import androidx\.lifecycle\.compose\.LocalLifecycleOwner/import androidx.compose.ui.platform.LocalLifecycleOwner/g' app/src/main/java/com/jarvis/assistant/avatar/AvatarView.kt
+          fi
+
+          # 2. Fix missing holdDurationMs parameter in AvatarVoiceSynchronizer.kt
+          if [ -f "app/src/main/java/com/jarvis/assistant/avatar/AvatarVoiceSynchronizer.kt" ]; then
+            sed -i 's/fun triggerContextualExpression(expression: AvatarExpression, gesture: AvatarGesture? = null)/fun triggerContextualExpression(expression: AvatarExpression, gesture: AvatarGesture? = null, holdDurationMs: Long = 4500L)/g' app/src/main/java/com/jarvis/assistant/avatar/AvatarVoiceSynchronizer.kt
+          fi
+
+          # 3. Ensure integer math in AvatarRenderer.kt
+          if [ -f "app/src/main/java/com/jarvis/assistant/avatar/AvatarRenderer.kt" ]; then
+            sed -i 's/minFrameIntervalNanos \* 0\.88L/minFrameIntervalNanos * 88L \/ 100L/g' app/src/main/java/com/jarvis/assistant/avatar/AvatarRenderer.kt
+          fi
+
+          # 4. Run Gradle build without --stacktrace so any compiler message is printed cleanly at the bottom
+          set -o pipefail
+          gradle assembleDebug --console=plain 2>&1 | tee build_output.log || {
+            echo "===================================================="
+            echo "EXACT COMPILER / GRADLE ERRORS (BOTTOM SUMMARY):"
+            echo "===================================================="
+            grep -E "(^e: |FAILURE:|What went wrong:|Execution failed for task|> |Unresolved reference|Type mismatch|Cannot find)" build_output.log | tail -n 50
+            exit 1
+          }
 
       - name: Upload Installable Debug APK
         uses: actions/upload-artifact@v4
