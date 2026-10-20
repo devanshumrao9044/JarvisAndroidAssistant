@@ -60,7 +60,7 @@ class AvatarRenderer(
                 frameTimeNanos - lastFrameTimeNanos
             }
 
-            if (elapsedNanos < minFrameIntervalNanos * 0.88L) {
+            if (elapsedNanos < minFrameIntervalNanos * 88L / 100L) {
                 return
             }
             lastFrameTimeNanos = frameTimeNanos
