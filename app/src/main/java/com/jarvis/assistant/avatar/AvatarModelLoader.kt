@@ -1,5 +1,4 @@
 package com.jarvis.assistant.avatar
-
 import android.content.Context
 import com.google.android.filament.Engine
 import com.google.android.filament.gltfio.FilamentAsset
@@ -9,14 +8,7 @@ import kotlinx.coroutines.withContext
 import java.io.FileNotFoundException
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
-
-/**
- * Loads glTF 2.0 Binary (.glb) models from Android assets into Google Filament's ModelViewer,
- * validates binary headers, and inspects actual skeletal animations and facial morph targets.
- * Never claims a model is loaded if the asset file is missing or invalid.
- */
 class AvatarModelLoader(private val context: Context) {
-
     fun listAvailableGlbAssets(): List<String> {
         return try {
             context.assets.list("models")
@@ -27,7 +19,6 @@ class AvatarModelLoader(private val context: Context) {
             emptyList()
         }
     }
-
     suspend fun readValidatedGlbBuffer(assetPath: String): Result<ByteBuffer> =
         withContext(Dispatchers.IO) {
             try {
@@ -59,7 +50,6 @@ class AvatarModelLoader(private val context: Context) {
                 Result.failure(e)
             }
         }
-
     fun applyBufferToModelViewer(
         assetPath: String,
         buffer: ByteBuffer,
@@ -69,13 +59,11 @@ class AvatarModelLoader(private val context: Context) {
             modelViewer.destroyModel()
             modelViewer.loadModelGlb(buffer)
             modelViewer.transformToUnitCube()
-
             val asset: FilamentAsset = modelViewer.asset
                 ?: return AvatarModelLoadState.Error(
                     assetPath = assetPath,
                     reason = "Filament failed to parse GLB entities from '$assetPath'."
                 )
-
             val animator = modelViewer.animator
             val clipNames = mutableListOf<String>()
             val clipCount = animator?.animationCount ?: 0
@@ -83,9 +71,7 @@ class AvatarModelLoader(private val context: Context) {
                 val name = animator?.getAnimationName(i)?.ifBlank { "Clip_$i" } ?: "Clip_$i"
                 clipNames.add(name)
             }
-
             val totalMorphTargets = inspectMorphTargetCount(modelViewer.engine, asset)
-
             AvatarModelLoadState.LoadedGlbModel(
                 assetPath = assetPath,
                 animationClips = clipNames,
@@ -100,7 +86,6 @@ class AvatarModelLoader(private val context: Context) {
             )
         }
     }
-
     private fun inspectMorphTargetCount(engine: Engine, asset: FilamentAsset): Int {
         val rcm = engine.renderableManager
         var maxMorphCount = 0
@@ -115,7 +100,6 @@ class AvatarModelLoader(private val context: Context) {
         }
         return maxMorphCount
     }
-
     companion object {
         private const val GLB_MAGIC_HEADER = 0x46546C67
     }

@@ -1,8 +1,4 @@
 package com.jarvis.assistant.avatar
-
-/**
- * 9 Gesture & Body Animation categories required by Section 7 of Part 2.
- */
 enum class AvatarGesture(val displayLabel: String, val clipKeywords: List<String>) {
     GREETING_WAVE("Greeting Wave", listOf("wave", "greet", "hello")),
     SMALL_NOD("Small Nod", listOf("nod", "yes", "agree")),
@@ -13,7 +9,6 @@ enum class AvatarGesture(val displayLabel: String, val clipKeywords: List<String
     THINKING_POSE("Thinking Pose", listOf("think", "ponder", "wonder")),
     LISTENING_POSE("Listening Pose", listOf("listen", "attentive")),
     SPEAKING_GESTURE("Speaking Gestures", listOf("talk", "speak", "explain"));
-
     companion object {
         fun fromValidatedName(rawName: String?): AvatarGesture? {
             if (rawName.isNullOrBlank()) return null
@@ -22,10 +17,6 @@ enum class AvatarGesture(val displayLabel: String, val clipKeywords: List<String
         }
     }
 }
-
-/**
- * Restricted, validated 13-expression schema required by Sections 3 & 4 of Part 2.
- */
 enum class AvatarExpression(
     val displayTitle: String,
     val hindiLabel: String,
@@ -110,7 +101,6 @@ enum class AvatarExpression(
         description = "Calm, attentive neutral stance with natural blinking",
         defaultGesture = AvatarGesture.NATURAL_IDLE
     );
-
     companion object {
         fun fromValidatedName(rawName: String?): AvatarExpression {
             if (rawName.isNullOrBlank()) return IDLE
@@ -119,10 +109,6 @@ enum class AvatarExpression(
         }
     }
 }
-
-/**
- * Honest model loading & capability status (Sections 2, 5, 11).
- */
 sealed class AvatarModelLoadState {
     data object Initializing : AvatarModelLoadState()
     data class LoadingFromAssets(val assetPath: String) : AvatarModelLoadState()
@@ -142,10 +128,6 @@ sealed class AvatarModelLoadState {
         val reason: String
     ) : AvatarModelLoadState()
 }
-
-/**
- * Continuous interpolated facial & skeletal pose frame evaluated at each render tick.
- */
 data class AvatarEvaluatedPose(
     val expression: AvatarExpression = AvatarExpression.IDLE,
     val activeGesture: AvatarGesture = AvatarGesture.NATURAL_IDLE,

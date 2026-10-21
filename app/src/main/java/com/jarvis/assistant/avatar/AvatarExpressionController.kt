@@ -1,12 +1,9 @@
 package com.jarvis.assistant.avatar
-
 import com.google.android.filament.Engine
 import com.google.android.filament.gltfio.FilamentAsset
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-
-/** Interpolated face controls consumed by the renderer on each frame. */
 data class AvatarExpressionPreset(
     val baseMouthOpen: Float = 0.0f,
     val smile: Float = 0.0f,
@@ -19,17 +16,13 @@ data class AvatarExpressionPreset(
     val headRollBiasDeg: Float = 0.0f,
     val energyGlow: Float = 0.5f
 )
-
-/** Validates expressions, interpolates transitions, and applies canonical GLB morph weights. */
 class AvatarExpressionController {
     private val _currentExpression = MutableStateFlow(AvatarExpression.IDLE)
     val currentExpression: StateFlow<AvatarExpression> = _currentExpression.asStateFlow()
-
     private var displayed = presetFor(AvatarExpression.IDLE)
     private var transitionStart = displayed
     private var transitionTarget = displayed
     private var transitionProgress = 1.0f
-
     fun setExpression(expression: AvatarExpression) {
         if (_currentExpression.value == expression) return
         transitionStart = displayed
@@ -37,7 +30,6 @@ class AvatarExpressionController {
         transitionProgress = 0.0f
         _currentExpression.value = expression
     }
-
     fun inferContextualExpression(text: String, isUserTurn: Boolean): Pair<AvatarExpression, AvatarGesture>? {
         val value = text.lowercase()
         val selected = when {
@@ -50,7 +42,6 @@ class AvatarExpressionController {
         } ?: return null
         return selected to selected.defaultGesture
     }
-
     fun stepInterpolation(deltaSeconds: Float, speedMultiplier: Float): AvatarExpressionPreset {
         val step = deltaSeconds.coerceAtLeast(0.0f) * speedMultiplier.coerceIn(0.25f, 3.0f) * 3.5f
         transitionProgress = (transitionProgress + step).coerceIn(0.0f, 1.0f)
@@ -69,11 +60,6 @@ class AvatarExpressionController {
         )
         return displayed
     }
-
-    /**
-     * Compatible GLBs use this canonical order: blink L, blink R, mouth, smile, frown,
-     * eye-wide, brow L, brow R. Unmapped extra targets stay neutral.
-     */
     fun applyMorphTargetsToFilamentAsset(engine: Engine, asset: FilamentAsset, pose: AvatarEvaluatedPose) {
         val manager = engine.renderableManager
         for (entity in asset.entities) {
@@ -95,7 +81,6 @@ class AvatarExpressionController {
             runCatching { manager.setMorphWeights(instance, weights, 0) }
         }
     }
-
     private fun presetFor(expression: AvatarExpression): AvatarExpressionPreset = when (expression) {
         AvatarExpression.HAPPY -> AvatarExpressionPreset(smile = 0.72f, energyGlow = 0.78f)
         AvatarExpression.LAUGHING -> AvatarExpressionPreset(baseMouthOpen = 0.5f, smile = 0.95f, eyeRelaxedLid = 0.12f, energyGlow = 0.95f)
@@ -111,6 +96,5 @@ class AvatarExpressionController {
         AvatarExpression.SLEEPY -> AvatarExpressionPreset(eyeRelaxedLid = 0.45f, energyGlow = 0.35f)
         AvatarExpression.IDLE -> AvatarExpressionPreset()
     }
-
     private fun mix(from: Float, to: Float, amount: Float): Float = from + (to - from) * amount
 }

@@ -1,6 +1,4 @@
 package com.jarvis.assistant.avatar
-
-/** Mobile rendering quality presets used by the avatar renderer and Settings screen. */
 enum class AvatarPerformanceTier(
     val displayName: String,
     val targetFps: Int,
@@ -10,7 +8,6 @@ enum class AvatarPerformanceTier(
     BATTERY_SAVER("Battery Saver", 24, true, false),
     BALANCED("Balanced", 30, true, true),
     HIGH_QUALITY("High Quality", 60, false, true);
-
     companion object {
         fun fromName(name: String?): AvatarPerformanceTier {
             val normalized = name?.trim().orEmpty()
@@ -21,7 +18,6 @@ enum class AvatarPerformanceTier(
         }
     }
 }
-
 data class AvatarConfiguration(
     val primaryGlbAssetPath: String = DEFAULT_GLB_ASSET_PATH,
     val animationSpeedMultiplier: Float = 1.0f,

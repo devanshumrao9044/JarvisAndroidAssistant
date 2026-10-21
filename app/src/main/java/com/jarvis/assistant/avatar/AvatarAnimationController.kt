@@ -1,5 +1,4 @@
 package com.jarvis.assistant.avatar
-
 import com.google.android.filament.gltfio.Animator
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -7,34 +6,22 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlin.math.cos
 import kotlin.math.sin
 import kotlin.random.Random
-
-/**
- * Controls skeletal animations on loaded GLB models (via Filament Animator) and computes
- * smooth procedural idle breathing, natural blinking, head movements, and gestures (Section 7).
- */
 class AvatarAnimationController {
-
     private val _activeGesture = MutableStateFlow(AvatarGesture.NATURAL_IDLE)
     val activeGesture: StateFlow<AvatarGesture> = _activeGesture.asStateFlow()
-
     private var elapsedTimeSec = 0f
     private var gestureStartTimeSec = 0f
     private var gestureDurationSec = 2.8f
-
     private var nextBlinkTimeSec = 2.4f
     private var blinkDurationSec = 0.16f
-
     @Volatile
     var liveVoiceMouthOpenTarget: Float = 0f
-
     private var smoothedVoiceMouth = 0f
-
     fun triggerGesture(gesture: AvatarGesture, durationSeconds: Float = 2.8f) {
         _activeGesture.value = gesture
         gestureStartTimeSec = elapsedTimeSec
         gestureDurationSec = durationSeconds
     }
-
     fun updateAnimationFrame(
         deltaSeconds: Float,
         config: AvatarConfiguration,
@@ -44,7 +31,6 @@ class AvatarAnimationController {
         val clampedDelta = deltaSeconds.coerceIn(0.001f, 0.1f)
         val speed = config.animationSpeedMultiplier.coerceIn(0.4f, 2.0f)
         elapsedTimeSec += clampedDelta * speed
-
         val currentGesture = _activeGesture.value
         if (currentGesture in listOf(
                 AvatarGesture.GREETING_WAVE,
@@ -55,10 +41,8 @@ class AvatarAnimationController {
         ) {
             _activeGesture.value = AvatarGesture.NATURAL_IDLE
         }
-
         val exprPreset = expressionController.stepInterpolation(clampedDelta, speed)
         val expression = expressionController.currentExpression.value
-
         var blinkWeight = exprPreset.eyeRelaxedLid
         if (config.autoBlinkEnabled) {
             if (elapsedTimeSec >= nextBlinkTimeSec) {
@@ -71,33 +55,26 @@ class AvatarAnimationController {
                 }
             }
         }
-
         val mouthAlpha = (clampedDelta * 18f).coerceIn(0.1f, 1.0f)
         smoothedVoiceMouth += (liveVoiceMouthOpenTarget - smoothedVoiceMouth) * mouthAlpha
-
         val laughingOscillation = if (expression == AvatarExpression.LAUGHING) {
             (sin(elapsedTimeSec * 14f) * 0.25f + 0.25f)
         } else 0f
-
         val finalMouthOpen = maxOf(
             exprPreset.baseMouthOpen + laughingOscillation,
             smoothedVoiceMouth * config.voiceLipSyncGain
         ).coerceIn(0f, 1f)
-
         val idleMotionScale = if (expression == AvatarExpression.SLEEPY) 0.45f else 1.0f
         val breathingOffset = sin(elapsedTimeSec * 1.8f * idleMotionScale) * 0.018f
-
         var headPitch = exprPreset.headPitchBiasDeg
         var headYaw = 0f
         var headRoll = exprPreset.headRollBiasDeg
         var rightArmWaveDeg = 0f
-
         if (config.idleHeadMotionEnabled) {
             headPitch += sin(elapsedTimeSec * 0.9f) * 2.2f * idleMotionScale
             headYaw += cos(elapsedTimeSec * 0.65f) * 4.5f * idleMotionScale
             headRoll += sin(elapsedTimeSec * 0.55f) * 1.8f * idleMotionScale
         }
-
         val gestureAge = elapsedTimeSec - gestureStartTimeSec
         when (_activeGesture.value) {
             AvatarGesture.GREETING_WAVE -> {
@@ -130,11 +107,9 @@ class AvatarAnimationController {
             }
             AvatarGesture.NATURAL_IDLE -> {}
         }
-
         if (filamentAnimator != null) {
             applySkeletalClipIfAvailable(filamentAnimator, _activeGesture.value, elapsedTimeSec)
         }
-
         return AvatarEvaluatedPose(
             expression = expression,
             activeGesture = _activeGesture.value,
@@ -154,7 +129,6 @@ class AvatarAnimationController {
             energyGlowIntensity = exprPreset.energyGlow
         )
     }
-
     private fun applySkeletalClipIfAvailable(
         animator: Animator,
         gesture: AvatarGesture,
@@ -163,7 +137,6 @@ class AvatarAnimationController {
         try {
             val count = animator.animationCount
             if (count <= 0) return
-
             var matchedIndex = -1
             for (i in 0 until count) {
                 val clipName = animator.getAnimationName(i).lowercase()
