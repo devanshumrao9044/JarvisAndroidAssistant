@@ -1,9 +1,7 @@
-name: Build Jarvis Android Assistant APK
+name: Build Jarvis APK
 
 on:
   push:
-    branches: [ "main", "master" ]
-  pull_request:
     branches: [ "main", "master" ]
   workflow_dispatch:
 
@@ -14,304 +12,379 @@ jobs:
   build-apk:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Source Code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Set up JDK 17
-        uses: actions/setup-java@v4
+      - uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
+      - uses: android-actions/setup-android@v3
         with:
           packages: 'platform-tools'
 
-      - name: Setup Gradle 8.7
-        uses: gradle/actions/setup-gradle@v3
+      - uses: gradle/actions/setup-gradle@v3
         with:
           gradle-version: '8.7'
 
-      - name: Permanently Fix Avatar Files & Build Debug APK
+      - name: Fix & Build APK
         run: |
-          if [ -d "JarvisAndroidAssistant" ] && [ -f "JarvisAndroidAssistant/settings.gradle.kts" ]; then
-            cd JarvisAndroidAssistant
+          P="app/src/main/java/com"
+          P="$P/jarvis/assistant/avatar"
+          mkdir -p "$P"
+          rm -f "$P"/*.kt
+          echo "
+          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
+          96dY9dlpr1teLc7Je4+gl1rVw+ZLHaCS7MPeRfdkce
+          U5zZuLqt9chvTeWbdDSX/a7YHC3K3JdEOMbIFYQ75j
+          6+Af0CU2ceqpi2ijlK1loo5tvj9fjiZZ9af02HQjlP
+          D6TtX5FDThWRjqksifTsN57zUJSeaHe2EwPRxCjVAY
+          VTUdSdO6P2lqUrJhaVJCAD6ybY5NrcOyxVDVC91qZW
+          2UUmIiuinXhNXe09WXICS2HQr9oMIOk/g6ssHSDyos
+          bHCounxEhggsqeGG6mMveM6rWarky2BASrZb+EmFv4
+          JWn/tBSngbZS0QPuHbkgLnZg30G91l2BUKtpDlfxak
+          3Gu30WLR1qnhU6ooB3/IpR5gqQe2UihAimL4l1wOWQ
+          f/08rBgE/jXUM71PRFtYy8TneiUcgXa2351vooIslo
+          /jSMr3E/HqVBNtd6KgcolGXJZCYshmg6q5zOeWnfMF
+          81dXudbkTMv2dsknPL25puxMiSuSZhqO0onkXIO1Fx
+          YbXawy/GLp7Bw0a51eCiQ0OZwJYFhgwZHEYDcgOY72
+          2o0xIknhugyanlAKqAN6Fs798HTp2AqJObCFu+3ASJ
+          39yg4UEXwKCB7ZBlz4rt5szzEN9Pyfw6TgYp0AoscV
+          5fo7wWFcHoizLY/aTu6+uG87bMFqARGdi3+DAgX9fe
+          QguSM7qpxSHCt1JKXY8p65VXbCNp4BGm3DLWCduIW1
+          Qodnqd7Ij4aYa2Tnm3l2+g43jKFhXAzYed82/yCtUl
+          IR9YOAHyyqVKmxK+hr0sszvvxhE59rMEtqmpK++k+8
+          gN0O8fOt2bPpkifrnf3vIp+Xbtk9XzgR+LOf8Den7r
+          +H9b7fbGlub/bbe32yv/78fi/yXRbOLIPtAzksAyMP
+          GjPrkISOLmDstBkE5Df45yGN2VCazlzTVVLh5M04cO
+          LMfFe0KtI/vMWnpO0jic4TB86OzGcUj8SIfcBXEz6U
+          SDTpyDrAlxsdu5uOiev7rswX7/3F3f9bOMwLrZA+0g
+          WQdVZKsJ6ygq1kMfhC5XS3Y7R52Tve4+wodI1ABAN1
+          sCFP/PIZ8dPn12+efPO0eHF6/c9Wegezh/PvND0Cug
+          xE6Lo+VF/u0a85tNpiAHQYzHV9+QfibJNVQrQJmd0D
+          Uwknj2JPd2aZy2KAARfg6DX1DPFSJ54gGOidvw4qQ7
+          mWZzbUHl+wXYeyQBes2DJM1OkxPYwFhWyiDzEKVHfg
+          5Upm5RV9MJRvAX2YMVG9cQpNf57jvrKgpIpHFRD5e6
+          xDpPHuadZFkVYG3xlfGpiLNidII6N/ETUPeuOilof2
+          egbAqOQ7373YPO86OLy6dHu5edXq97cXnWuXhWDL4y
+          d2Dh9EUDaAE/VbuurEcf2d97gl6pAZqTJh/9nGkFpN
+          X6WA6uG45VivK5VTGSQedKM4rLzkVAtT6JB6Do3GdC
+          5pKJFm8UXq2vVvc/+vpv881/ODVgQfzX1kZ7U4//2t
+          lexX/9a4r/6kajICJLRIodCAMYSuKPIlzMWEWKScGs
+          BcVCorjtpDgjRf5Tk1bZR2rDKvuouOsrgNDIVPZZ2J
+          SqvlMLUhmA7lGrgpO8ZaXNzS0tMsQ2rC5rdp5Xh9cZ
+          4RDlIXaS01KNrjNwmBF2xTcaZGcGYVQH2nG1h6pmUz
+          qGDuKkqlly4Szx0WKFCge6xDCeSaCrgOUe9XrAUkxG
+          7rxFpRQaWjRP8gSboVzyNh1NHZclcSroQyZSKc30tI
+          hWFSanseCphNtSQKKzJTtCylsrNVYLoQuiIUEFMyM3
+          GSiyEp/wTb7rcYL0eUqSC6AyV7xAqz/zg8QYW03VIv
+          j4iRbWJtqEFVgNZVTckBB0MjrUqLdUVeZ5eNh6GicJ
+          7lXWUx83OeuzKTAQf4xnCf337vY3d9//8u7279gfv7
+          u7/ee72/92d/t/lL/XG9z2RptWmNyCrAHa+r3HlniB
+          zr61QVB0BHo6YvevYe83IfTnxP8FcBF/jtAo7HwTX7
+          EG/MPd7e9pA2+du9u/urv99d33f3t3+1+gWez7P9EG
+          /hbJwB//uHxLuz/bO7zo2ls7JmEYU3YFDv4DmyM/zQ
+          ir+reUPT/QBt3eff8rfJuN/eg1+/xfEQK//Y+72/9F
+          G/eb5Rt3cH7YPdk/emVt3fWYdu04vsZ/rseMrTCSQ8
+          DKGvGfeAu+//d3t3+Zv/p3tNm/UkEER3+gZP09bfF/
+          XL7Fwk2qWqLzyWEtk7s3VWs+mkkBHJ1ta8rekO9plQ
+          /8XT4tsjj/7Q3I0If921Mp+raY4Gb4ni0ulkXxGbvA
+          xsMS5UGb0liJPUJVMt1SJ2ZaHnza3h42qe/UcHZaRZ
+          9refsFbYkSztUywrmo8YbuGvXyReiwtNJVaU+5ZV0J
+          fHrkTIIbV1sE1OCopiH/je8Ni6+xBDVzN5ooxfuGxR
+          VZgop5I01U4r3pNix0uxKUCowFtf7d7pksR06dk1a0
+          /EvD9ERyr6W1n4T70tJFxScLTuHYLEPKPJx2rOJbo8
+          QDytXREuw6mKUSC0iJ93NxVRJUSU0qRKPMjVnWpzmA
+          rVvljw3NzylJSlXjKuQh9fscx8l0zBCmF7GyeXMJ3f
+          s9dNgesOn4+BbkoQzUdKZxSqwx/A1NNE78CDakaBhj
+          iD3Q0AYkQdX+mH1aU3yRUAX6dYOIVezRvwOS2mKYP+
+          XIvbGf7sWwN4wAmmNoNNCMBZvDGTGMrLDEZWiZowGd
+          DANw4pC/FQhKnbNSGYmR1EHrCtSNSldtacv6fhRHQd
+          /HGMYhrkCdJPHntpMA2AGeHCjRrAaxxBfkMFrURwmU
+          FO1RAiHFeJS3pgizKIFRQisWwVCy1CMHBlOvaW24Zh
+          7kLHWFmxsGAzpt0eUseI8de5p0QT9x6UeEwoUUtBPV
+          PZzMoj30daLF+dt8WKR8WDAi03xINEVDmjgE3hqWbz
+          1EwbYdsmzZSlUUvnOQN1PSHDK0NBryZ9Pf+IIvFuCW
+          9yUGnShSDN49kDSM0kjtCvS6CoHWhKZTVPoV/qkvty
+          1vw9KWr7ar2iJ07lqkblnQ71SSKhTkKlKLBRgIwFgc
+          eflkEfjmarRFVTmtLduVpOaKd0VjCvXCzsztSmpF6O
+          BSHdt6oPSsrdadSrp6z8/Pzg973f2adH0peJxzfWfb
+          4Dp7ZTS2bWndg+rWdaraJZRPqQ15qzbbRqvoK4saZB
+          0Nm1XN2js9OXhezTOlMW2TRa1t68jcsY7MdlVj+K68
+          1hx8wGd+3p00fE2pTt3gmD3SPT88fd6rGi1q47eqO5
+          gelqgee5qY2tq29FZlJSJwtaSKsrg21CfRCZ1vbLM4
+          /+lPcM0rtrbCcIvwsHV0YU99j/6BG1AGvHLj/Wv0/x
+          2jb/Yo9gcfNO9DTf9fa8fw/23sbG6v/H8fmf9PuPJw
+          L4KePG4E/8O5B6vKzbIgTD06jl8E5JpUpaDYh50ujb
+          9M0gqo6yAbayR+AwzxWOvISQya9iwa5BGLClAEULvz
+          jOzOhsOiLcqn0wRmm+L8kmahK3u7+qwVDx3eHKGVo/
+          hG228ehywiW1IXhPURfPmaeSPk0xl8t29GE/NaPLqL
+          Tj1E7PKgjXUzJvcJsj5D5xzG98AOPX0J/HLXaUSHNT
+          rorQXHxJ8CAhEa8lmQrVvALIFMC0NGqdkECyEX3IZ1
+          65TOUtDZBpSNCegoL/wwwDDVAbCR9Zvr63FCwNdzks
+          7C7Ouidx87j4qDasWgcaVh5h2e6q0zO8DSCTE0sGhE
+          w5vhiWHYgE5nGbSH+BNY8EuPOl9BC3EPK4F7SCe2PH
+          Xth5rpmWr87qXBL4jztdNulUVQF4PpJxLVnD3eEIYk
+          Zs4oLYrPYRiSkR92ktFsQt1wvCfddTqMnT/9LKf9T5
+          0gBdUkhm2AH4aO+9m3RTPfMlIbaOO/Io6P1IMa9fRo
+          F9NKEG+9UdoK+5e35cfHg4T0M9bvwNpiEHjQqhgGJd
+          mnEBITGyxyuoKLMUoCN5cJXuTjoRv6u+zwOdXiZrya
+          RkX/XAfRwF2Wyok/CmgyEYlaZvDK3FajtNgbGOnMFW
+          8ruFU+4lh9nz7CLrs87jw93LvEg4rdc+e773Ks8Ln9
+          sYzFQQwzK4ozZ+y/KQbcKLw4wGwgzlUQ+TC9XRSGDb
+          r/ATZ8oFGosLayfzn16azfh52AKxdcmBdAkq/Wxc7W
+          ERq3reXcdbrI0XlpTG9k6BxYPQ39PhlQi+50ej9N+v
+          cnfhDdZzLxPl8sgJ8Ne5tJxZpgaacebKqtFbkJnHHu
+          IpZ0DOncj75QFGbIK1ruoSQrim+TAtdDR1ZelJQ3uV
+          5AY03qrOUSXm9A0iyJ5xSJNlJkMNjaDSgMrH7ulWWU
+          yMDUyYDhqhfx8yjI9mZX+rkdGrBqcQSgNVxCREFMxe
+          CheqxRZYDXTZI4sc/mvB/w0Iz43Vyzyws/pcJqXTTQ
+          wSHBXMVTP4GlFlcQ4U5gm155yHrra9UTuYgajhOdbp
+          Eorey8FC7cExbQdETd+0KVs/AZy+xp58CeaAfBkKet
+          RQe5BJ6yw1yRepDrie0k1xMvGO6GfvQaFTs8HnT5Wb
+          DO3PT5n6baI6j2/MGAhsI3Fh2yijM8ZVp4paiiAwpd
+          33SxyIwnspOqYTkPrI01qo6jRsjmz9o7DriiM4BSbG
+          tOsQnLvEl5hypOLapRmEXGfnrg9wODIyaXHjsts/iA
+          ZDQwQuecDUOJ66SW9F1mNtdkbDGLcbKiEHMIInzofP
+          Yt8VAlo2cMjmEFxG0ujsLDiEayZwHMLbZmg4Cc9TEU
+          ZP3tehl9JeazsjFXxynaoAdhNPdn0p/UcX2yg5o3tF
+          7RV613d4xCrSU+UbskkByiWHSRM1R3iPIyNZ2hqkP0
+          sUp3+QFPlTl94zhsvXRIfCFS0EljoeJQhBgmxeEIQ7
+          2FPrvZ2tne2tnb+fKPcwyCTclzOs5+FOPfQvtfe7O9
+          oed/3cBXK/vfx2n/8yNQ1NlJ0d5sSt0MR0GU1TQTis
+          9vYD329sZxQuJR4k/HJLFC9GbJEHYDuHpr32+8MBiS
+          /rwPO/x9FtB3JF6cXqUkeWOglIvksHVgTq8jUuschN
+          zOKjjx4nnwjITTerhLTZyLCz3H/1fYOvfEz14/npKP
+          L3uvAhr6s6g/ViynQn65a5IRLbeXNo3zAymSid9lsq
+          XDCkumMbUEPRYf3YblDKGJ15ZX+FH5N9gGNCwHI2Cn
+          KowfjwpjImxfg36OACdjkegvNznntclm6AJfQz0uiG
+          cFx0kcgXJVlHyhf3FtnGza2NCwnPGQT3GWn+9QD3s2
+          pPMd8gfzbIdSjh3vUE7BVx3tgNZN1E252byvbdruY9
+          eqAx/CJjpATRVNzGbnUCCTAg01kqAWWUQDUXLplp+g
+          UbIKSRxWyltOz8ifafOUAgsOz/TltQHmqvznE+dREe
+          0tF5pxefrQEZK1FLTM9lJawM8yH5N25KsC+lj4z9JC
+          QcpkE3Rsh+ZSQvc5HhI3IEGcZTQhM+bROPGjmB5XOT
+          J6bYgwe34YXsHSDSBc79Q45B0oYIVWGsOymGBgBO5e
+          BjFLAT1U6gW6YhiHtvhJgxxrFhml655405hTJprjZu
+          MgtYVL4vwzZ6Ka6TafHQHLX01j9eGFYNnGJeiQ4r8j
+          575Ij6mdx/bydARF8PvGNp7iNxvGs3CJGpATtt7C7r
+          JtR6wtXauVDFbtGOeeZZRUGEqktL2s/NclXPvcefAA
+          WbXRslNg6WO1JuvgHZa3k/pSpMMPUlZgVvq+2o8Yrq
+          Om8N42Unjn6xOdxqrBzZICB+06wiTJijyxmCPpSX4m
+          HS2rlledUN2WWF079dG0uQDZLGA/LPYhuwZCKvOrl+
+          VZl4m32SRV9moCXBxMQwYZA493A8+Oh2m9ZZ6XJM0r
+          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
+          dNV1GY9mc35sUitqlO5oRV9jPOtZa3uTO0A77ClFVz
+          5x6H29gugeMXJdIlCaCNa2mVPF8bxmXkPwq/3W1szO
+          eieY2CS/U6AugoWEXvHnz1Bx4x703BF0tTkPtdeM9/
+          IUbI1rAM8pkfDl/yoeTSuyqhlH5XMBs+7WFpfUjgsw
+          JLayvHormBxKJk4/0RaKPvw3mqm2tjoKCxyTlj5T5e
+          OqWyvmbBlE7nl3w2u5vY5V/IPOETb1Hv+9NcNuz5U2
+          Z7q+hssbrgv/jfeXz93nqppDMb23l9PflqqAgrYVx0
+          x3ES/AI3FhgYsbFFNwhC1YY3D1DNF/QXsOVKeG8Kle
+          +S7JqQ3IGcq+7CIIZlxG9vj86jFxwmnCsaNt9Q2LQ8
+          WStXVR/cmOvDkqfzVXbY8i0bf9Y5f3HYWzfV1b6y2Z
+          JMBTrgMLdA4Z3X+R9ej0yC3Tgc2OBRRWV8T6eGnuzf
+          4Pyi6Tj1bzE3XME32Y7ldUMMCAjSNfsgrGCMpkt6Sj
+          zNF8668y//G/7HRYTibPbk0yuLuZdbTKr4sfHj80NM
+          SJ0nnB9Mwy42d6ZyXbbbU6JLQOFcP0sIKG8YDFQTgx
+          FqQtHwt8wSswwqKWcj4tncp5mHzok/mNdFYwZsCFR5
+          OiJ25r4uQhp2YeA44AfvZSzKhBTDSXEvePRtr09/T8
+          3JWTWwbIJFiEaxOj3ITR1s9KwOXa4em/9fT9z+QYMB
+          qv3/re2NnQ3N/7+5sdle+f8/Mv+/FYSeKfDY+GHLL3
+          NCykFj5rUARibXZW9cMK90WO5qhTX5Dt0sCUYjNE1T
+          8+PMD/UjbWryX7NdhVQeWYPYRHZ4KaYXlKp9nv3jmC
+          dcB6Ct7RZPNyOv2da8w7COSc2ULGlqmCGvQ0qzrVbN
+          kn5r+bVRL4V9d0vZeNvSX3POifPAnHoMeZXVMSV4uK
+          m3Sc9UE0d0vNDcNs9pftiiE1JpiD10jFFX8JfeeduZ
+          TMMgmw2IuNC+cJ/MssrvQdoRI1ycwclDS43usTEGw/
+          xp847F5oyFndKrgllSJKOGht4sJeG5MIQwYyC+KC4d
+          Rn0P22NBinqKaGqNcWQaMPkhoIbkNrARrKrVLG3Wp4
+          tOFKmKaY0BtgCdtk+VRwuGZRvjpTjYhRnB1TGDN+V5
+          rfb28H05mNfxQVioHkV7TwZqyJZm39n56V6310P+ff
+          ddDfjuz7p7z+nJSHaK5X1ZK+zzH4SzymnG92Ssius9
+          huWHHHtY96dy5R7IC8oZXvn71oYh2R+kK+QY7/fsCQ
+          WV1hH2dHbInHgq5OcFQ04Gbs65IAwZ2/Il4d1XA1WQ
+          q5oQv2nErLfhlHc0Wx6sXfO++kQN3peu+o3VbnP1rJ
+          7Vs3pWz+pZPatn9aye1bN6Vs/qWT2rZ/WsntWzelbP
+          6lk9q2f1rJ7Vs3pWz+pZPatn9aye1bN6Vs/qWT2r58
+          M8/w8S/Qu8APAAAA==
+          " | base64 -di | tar -xzf - -C "$P"
+          set +e
+          gradle assembleDebug --console=plain >b.log 2>&1
+          RC=$?
+          cat b.log
+          if [ $RC -ne 0 ]; then
+            echo "=== EXACT ERRORS ==="
+            grep -E "(^e: |FAILURE|What went)" b.log | tail -n 20
+            exit $RC
           fi
+          git config user.name "bot" || true
+          git config user.email "b@g.com" || true
+          git add "$P" || true
+          git commit -m "Fix [skip ci]" || true
+          git push || true
 
-          # 1. Permanently write clean AvatarView.kt (fixes missing package header & Compose imports)
-          cat << 'EOF' > app/src/main/java/com/jarvis/assistant/avatar/AvatarView.kt
-          package com.jarvis.assistant.avatar
-
-          import android.view.SurfaceView
-          import androidx.compose.foundation.BorderStroke
-          import androidx.compose.foundation.Canvas
-          import androidx.compose.foundation.background
-          import androidx.compose.foundation.layout.Arrangement
-          import androidx.compose.foundation.layout.Box
-          import androidx.compose.foundation.layout.Column
-          import androidx.compose.foundation.layout.Row
-          import androidx.compose.foundation.layout.fillMaxSize
-          import androidx.compose.foundation.layout.fillMaxWidth
-          import androidx.compose.foundation.layout.height
-          import androidx.compose.foundation.layout.padding
-          import androidx.compose.foundation.shape.RoundedCornerShape
-          import androidx.compose.material3.Card
-          import androidx.compose.material3.CardDefaults
-          import androidx.compose.material3.MaterialTheme
-          import androidx.compose.material3.Text
-          import androidx.compose.runtime.Composable
-          import androidx.compose.runtime.DisposableEffect
-          import androidx.compose.runtime.collectAsState
-          import androidx.compose.runtime.getValue
-          import androidx.compose.ui.Alignment
-          import androidx.compose.ui.Modifier
-          import androidx.compose.ui.geometry.Offset
-          import androidx.compose.ui.graphics.Brush
-          import androidx.compose.ui.graphics.Color
-          import androidx.compose.ui.graphics.StrokeCap
-          import androidx.compose.ui.graphics.drawscope.Stroke
-          import androidx.compose.ui.platform.LocalLifecycleOwner
-          import androidx.compose.ui.text.font.FontWeight
-          import androidx.compose.ui.text.style.TextOverflow
-          import androidx.compose.ui.unit.Dp
-          import androidx.compose.ui.unit.dp
-          import androidx.compose.ui.unit.sp
-          import androidx.compose.ui.viewinterop.AndroidView
-          import com.jarvis.assistant.ui.theme.JarvisAmber
-          import com.jarvis.assistant.ui.theme.JarvisCardSurface
-          import com.jarvis.assistant.ui.theme.JarvisCyan
-          import com.jarvis.assistant.ui.theme.JarvisDeepNavy
-          import com.jarvis.assistant.ui.theme.JarvisElectricBlue
-          import com.jarvis.assistant.ui.theme.JarvisEmerald
-          import com.jarvis.assistant.ui.theme.JarvisTextPrimary
-          import com.jarvis.assistant.ui.theme.JarvisTextSecondary
-
-          @Composable
-          fun AvatarView(
-              avatarRenderer: AvatarRenderer,
-              assistantName: String,
-              modifier: Modifier = Modifier,
-              viewportHeight: Dp = 320.dp
-          ) {
-              val lifecycleOwner = LocalLifecycleOwner.current
-              val modelState by avatarRenderer.modelLoadState.collectAsState()
-              val pose by avatarRenderer.evaluatedPose.collectAsState()
-
-              DisposableEffect(lifecycleOwner) {
-                  avatarRenderer.startRenderLoop()
-                  onDispose { avatarRenderer.stopRenderLoop() }
-              }
-
-              Card(
-                  modifier = modifier
-                      .fillMaxWidth()
-                      .height(viewportHeight),
-                  colors = CardDefaults.cardColors(containerColor = JarvisDeepNavy),
-                  border = BorderStroke(1.5.dp, JarvisCyan.copy(alpha = 0.45f)),
-                  shape = RoundedCornerShape(20.dp)
-              ) {
-                  Column(
-                      modifier = Modifier
-                          .fillMaxSize()
-                          .background(Color(0xFF07111F)),
-                      verticalArrangement = Arrangement.Bottom
-                  ) {
-                      Box(
-                          modifier = Modifier
-                              .fillMaxWidth()
-                              .weight(1.0f)
-                      ) {
-                          if (modelState is AvatarModelLoadState.LoadedGlbModel) {
-                              AndroidView(
-                                  factory = { context ->
-                                      SurfaceView(context).also { view ->
-                                          avatarRenderer.attachSurfaceView(view, lifecycleOwner.lifecycle)
-                                      }
-                                  },
-                                  modifier = Modifier.fillMaxSize()
-                              )
-                          } else {
-                              Canvas(modifier = Modifier.fillMaxSize()) {
-                                  val cx = size.width * 0.5f
-                                  val cy = size.height * 0.48f + (pose.torsoBreathingOffset * size.height)
-                                  val r = size.minDimension * 0.28f
-                                  val primaryColor = when (pose.expression) {
-                                      AvatarExpression.HAPPY, AvatarExpression.EXCITED, AvatarExpression.LAUGHING -> JarvisEmerald
-                                      AvatarExpression.THINKING -> JarvisElectricBlue
-                                      AvatarExpression.SURPRISED, AvatarExpression.CONFUSED -> JarvisAmber
-                                      else -> JarvisCyan
-                                  }
-                                  drawCircle(
-                                      brush = Brush.radialGradient(
-                                          colors = listOf(primaryColor.copy(alpha = 0.25f), Color.Transparent),
-                                          center = Offset(cx, cy),
-                                          radius = r * 1.6f
-                                      ),
-                                      radius = r * 1.6f,
-                                      center = Offset(cx, cy)
-                                  )
-                                  drawCircle(
-                                      color = primaryColor,
-                                      radius = r,
-                                      center = Offset(cx, cy),
-                                      style = Stroke(width = 2.5.dp.toPx())
-                                  )
-                                  val eyeOffsetX = r * 0.36f
-                                  val eyeY = cy - r * 0.15f
-                                  val eyeOpen = (1.0f - pose.eyeBlinkLeft).coerceIn(0.1f, 1.0f)
-                                  drawCircle(
-                                      color = primaryColor,
-                                      radius = (5.0f * eyeOpen).dp.toPx(),
-                                      center = Offset(cx - eyeOffsetX, eyeY)
-                                  )
-                                  drawCircle(
-                                      color = primaryColor,
-                                      radius = (5.0f * eyeOpen).dp.toPx(),
-                                      center = Offset(cx + eyeOffsetX, eyeY)
-                                  )
-                                  val mouthY = cy + r * 0.34f
-                                  val mouthHalfW = r * (0.32f + pose.smileWeight * 0.12f)
-                                  val mouthOpenH = r * (0.04f + pose.mouthOpenWeight * 0.28f)
-                                  drawLine(
-                                      color = primaryColor,
-                                      start = Offset(cx - mouthHalfW, mouthY),
-                                      end = Offset(cx + mouthHalfW, mouthY),
-                                      strokeWidth = (3.0f + mouthOpenH * 0.15f).dp.toPx(),
-                                      cap = StrokeCap.Round
-                                  )
-                              }
-                          }
-                      }
-                      Row(
-                          modifier = Modifier
-                              .fillMaxWidth()
-                              .background(JarvisCardSurface.copy(alpha = 0.9f))
-                              .padding(horizontal = 14.dp, vertical = 8.dp),
-                          horizontalArrangement = Arrangement.SpaceBetween,
-                          verticalAlignment = Alignment.CenterVertically
-                      ) {
-                          Column(modifier = Modifier.weight(1.0f)) {
-                              Text(
-                                  text = assistantName.ifBlank { "JARVIS" },
-                                  color = JarvisTextPrimary,
-                                  fontWeight = FontWeight.SemiBold,
-                                  fontSize = 14.sp,
-                                  maxLines = 1,
-                                  overflow = TextOverflow.Ellipsis
-                              )
-                              Text(
-                                  text = pose.expression.displayTitle + " · " + pose.activeGesture.displayLabel,
-                                  color = JarvisTextSecondary,
-                                  fontSize = 11.sp,
-                                  maxLines = 1,
-                                  overflow = TextOverflow.Ellipsis
-                              )
-                          }
-                          Text(
-                              text = when (modelState) {
-                                  is AvatarModelLoadState.Initializing -> "Preparing"
-                                  is AvatarModelLoadState.LoadingFromAssets -> "Loading model"
-                                  is AvatarModelLoadState.LoadedGlbModel -> "3D GLB Ready"
-                                  is AvatarModelLoadState.AwaitingModelAsset -> "3D Holo-Rig Active"
-                                  is AvatarModelLoadState.Error -> "3D Holo-Rig Fallback"
-                              },
-                              color = MaterialTheme.colorScheme.primary,
-                              fontSize = 11.sp,
-                              modifier = Modifier.padding(start = 8.dp)
-                          )
-                      }
-                  }
-              }
-          }
-          EOF
-          # Strip leading indentation from heredoc
-          sed -i 's/^          //' app/src/main/java/com/jarvis/assistant/avatar/AvatarView.kt
-
-          # 2. Permanently write clean AvatarVoiceSynchronizer.kt
-          cat << 'EOF' > app/src/main/java/com/jarvis/assistant/avatar/AvatarVoiceSynchronizer.kt
-          package com.jarvis.assistant.avatar
-
-          import com.jarvis.assistant.voice.VoiceSessionState
-
-          class AvatarVoiceSynchronizer(
-              private val expressionController: AvatarExpressionController,
-              private val animationController: AvatarAnimationController
-          ) {
-              fun triggerContextualExpression(
-                  expression: AvatarExpression,
-                  gesture: AvatarGesture? = null,
-                  holdDurationMs: Long = 4500L
-              ) {
-                  expressionController.setExpression(expression)
-                  val durationSeconds = (holdDurationMs / 1000.0f).coerceIn(1.0f, 10.0f)
-                  animationController.triggerGesture(gesture ?: expression.defaultGesture, durationSeconds)
-              }
-
-              fun onVoiceFrameUpdate(
-                  sessionState: VoiceSessionState,
-                  inputAmplitude: Float,
-                  outputAmplitude: Float,
-                  isAssistantSpeaking: Boolean
-              ) {
-                  animationController.liveVoiceMouthOpenTarget =
-                      if (isAssistantSpeaking) outputAmplitude.coerceIn(0.0f, 1.0f) else 0.0f
-
-                  when {
-                      isAssistantSpeaking -> {
-                          expressionController.setExpression(AvatarExpression.SPEAKING)
-                          if (animationController.activeGesture.value != AvatarGesture.SPEAKING_GESTURE) {
-                              animationController.triggerGesture(AvatarGesture.SPEAKING_GESTURE)
-                          }
-                      }
-                      sessionState == VoiceSessionState.LISTENING && inputAmplitude > 0.025f -> {
-                          expressionController.setExpression(AvatarExpression.LISTENING)
-                          if (animationController.activeGesture.value != AvatarGesture.LISTENING_POSE) {
-                              animationController.triggerGesture(AvatarGesture.LISTENING_POSE)
-                          }
-                      }
-                      sessionState == VoiceSessionState.PROCESSING || sessionState == VoiceSessionState.EXECUTING_ACTION -> {
-                          expressionController.setExpression(AvatarExpression.THINKING)
-                          if (animationController.activeGesture.value != AvatarGesture.THINKING_POSE) {
-                              animationController.triggerGesture(AvatarGesture.THINKING_POSE)
-                          }
-                      }
-                      sessionState == VoiceSessionState.LISTENING -> {
-                          expressionController.setExpression(AvatarExpression.LISTENING)
-                      }
-                      !sessionState.isActiveSession -> {
-                          expressionController.setExpression(AvatarExpression.IDLE)
-                          if (animationController.activeGesture.value != AvatarGesture.NATURAL_IDLE) {
-                              animationController.triggerGesture(AvatarGesture.NATURAL_IDLE)
-                          }
-                      }
-                  }
-              }
-
-              fun onStopSpeakingTriggered(sessionStillActive: Boolean) {
-                  animationController.liveVoiceMouthOpenTarget = 0.0f
-                  val expression = if (sessionStillActive) AvatarExpression.LISTENING else AvatarExpression.IDLE
-                  expressionController.setExpression(expression)
-                  animationController.triggerGesture(expression.defaultGesture)
-              }
-          }
-          EOF
-          sed -i 's/^          //' app/src/main/java/com/jarvis/assistant/avatar/AvatarVoiceSynchronizer.kt
-
-          # 3. Build Debug APK
-          gradle assembleDebug --console=plain
-
-          # 4. Save the fixed files permanently back to the GitHub repository branch
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          if [ -n "$(git status --porcelain)" ]; then
-            git add app/src/main/java/com/jarvis/assistant/avatar/AvatarView.kt app/src/main/java/com/jarvis/assistant/avatar/AvatarVoiceSynchronizer.kt
-            git commit -m "Permanent auto-fix for AvatarView and AvatarVoiceSynchronizer [skip ci]" || true
-            git push || true
-          fi
-
-      - name: Upload Installable Debug APK
-        uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v4
         with:
           name: JarvisAndroidAssistant-debug-apk
-          path: "**/app/build/outputs/apk/debug/app-debug.apk"
+          path: "**/app-debug.apk"
